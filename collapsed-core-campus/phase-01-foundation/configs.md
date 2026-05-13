@@ -13,63 +13,33 @@
 
 ## CORE1
 
-enable
-configure terminal
-
 hostname CORE1
 no ip domain-lookup
 spanning-tree mode rapid-pvst
 
-end
-write memory
-
 ## CORE2
-
-enable
-configure terminal
 
 hostname CORE2
 no ip domain-lookup
 spanning-tree mode rapid-pvst
 
-end
-write memory
-
 ## ACC1
-
-enable
-configure terminal
 
 hostname ACC1
 no ip domain-lookup
 spanning-tree mode rapid-pvst
 
-end
-write memory
-
 ## ACC2
-
-enable
-configure terminal
 
 hostname ACC2
 no ip domain-lookup
 spanning-tree mode rapid-pvst
 
-end
-write memory
-
 ## ACC3
-
-enable
-configure terminal
 
 hostname ACC3
 no ip domain-lookup
 spanning-tree mode rapid-pvst
-
-end
-write memory
 
 
 # STEP 2 — VLAN Configuration
