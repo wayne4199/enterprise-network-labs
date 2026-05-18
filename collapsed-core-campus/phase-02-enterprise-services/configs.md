@@ -93,12 +93,12 @@ interface g0/0
  description TO-EXTERNAL-CONNECTOR
  no ip address
  ip address dhcp
- no shutdown
  ip nat outside
+ no shutdown
 
  Why
- - External Connector로 부터 DHCP 주소를 받아 인터넷에 연결한다.
- - NAT outside로 지정하여 PAT 변환의 외부 인터페이스로 사용한다.
+ - External Connector로 부터 DHCP 주소를 받아 인터넷 연결을 수행한다.
+ - NAT outside 인터페이스로 사용한다.
 
 interface g0/1
  description TO-CORE1
