@@ -19,42 +19,45 @@ Purpose
 - MGMT-SRV1은 Phase 02에서 통합 관리 서버 역할을 수행한다.
 - DHCP, DNS resolver, Syslog receiver, SNMP manager 역할을 하나의 Ubuntu 노드에 통합하여 실제 Enterprise Management Server 구조를 학습하기 위해 사용한다.
 
----
-
+```bash
 sudo ip link set ens2 up
 sudo ip addr add 10.20.20.31/24 dev ens2
 sudo ip route add default via 10.20.20.254 dev ens2
-
+```
 Why
 - ens2를 활성화하여 네트워크 연결을 사용 가능하게 한다.
 - 10.20.20.31/24는 MGMT-SRV1의 고정 관리 IP이다.
 - default route는 MGMT-SRV1이 CORE/EDGE를 통해 외부 인터넷과 내부 VLAN으로 통신하기 위해 필요하다.
 
 ---
-  
+
+```bash  
 sudo nano /etc/resolv.conf
 
 nameserver 8.8.8.8
 nameserver 1.1.1.1
-
+```
 Why
 - Ubuntu에서 apt update, 패키지 설치, 외부 도메인 해석을 하기 위해 DNS resolver를 수동 지정했다.
 
 ---
-  
+
+```bash  
 sudo apt update
 sudo apt install dnsmasq -y
 sudo apt install snmp snmp-mibs-downloader -y
-
+```
 Why
 - dnsmasq : DHCP/DNS 서비스 제공
 - snmp : MGMT-SRV1에서 Cisco 장비를 SNMP로 조회하기 위한 도구
 - snmp-mibs-downloader : MIB/OID 해석 보조 도구
 
 ---
-  
-sudo nano /etc/dnsmasq.conf
 
+```bash
+sudo nano /etc/dnsmasq.conf
+```
+```cisco
 port=0
 interface=ens2
 
@@ -62,7 +65,7 @@ dhcp-range=10.10.10.100,10.10.10.199,255.255.255.0,12h
 dhcp-option=option:router,10.10.10.254
 dhcp-option=option:dns-server,8.8.8.8,1.1.1.1
 log-dhcp
-
+```
 Why
 - port=0 : systemd-resolved와 DNS 포트 53 충돌을 피하고 DHCP 기능 중심으로 사용한다.
 - interface=ens2 : DHCP 서비스를 MGMT-SRV1의 실제 연결 인터페이스에 바인딩한다.
@@ -72,27 +75,31 @@ Why
 - log-dhcp : DHCP lease 과정을 로그로 확인하기 위해 필요하다.
 
 ---
-  
+
+```bash
 sudo systemctl restart dnsmasq
 sudo systemctl enable dnsmasq
-
+```
 Why
 - dnsmasq 설정을 적용하고, 재부팅 후에도 DHCP 서비스가 자동 시작되도록 한다.
 
 ---
-  
-sudo nano /etc/rsyslog.conf
 
+```bash  
+sudo nano /etc/rsyslog.conf
+```
+```cisco
 module(load="imudp")
 input(type="imudp" port="514")
-
+```
 Why
 - Cisco 장비들이 UDP/514로 전송하는 Syslog 메시지를 MGMT-SRV1이 수신할 수 있도록 한다.
 
 ---
-  
-sudo systemctl restart rsyslog
 
+```bash  
+sudo systemctl restart rsyslog
+```
 Why
 - rsyslog 설정 변경 사항을 적용한다.
 
