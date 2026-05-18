@@ -112,7 +112,8 @@ Purpose
 - NAT/PAT, default route, 내부망 return route, SSH, NTP, Syslog, SNMP agent 기능을 담당한다.
 
 ---
-  
+
+```cisco  
 conf t
 hostname EDGE1
 
@@ -122,13 +123,14 @@ interface g0/0
  ip address dhcp
  ip nat outside
  no shutdown
-
+```
  Why
  - External Connector로 부터 DHCP 주소를 받아 인터넷 연결을 수행한다.
  - NAT outside 인터페이스로 사용한다.
 
 ---
 
+```cisco
 interface g0/1
  description TO-CORE1
  ip address 10.255.255.1 255.255.255.252
@@ -140,18 +142,19 @@ interface g0/2
  ip address 10.255.255.5 255.255.255.252
  no shutdown
  ip nat inside
-
+```
 Why
 - CORE1~2과 EDGE1 사이의 point-to-point routed link이다.
 - 내부망에서 외부로 나가는 트래픽의 NAT inside 구간이다.
 
 ---
-  
+
+```cisco  
 ip route 0.0.0.0 0.0.0.0 dhcp
 ip route 10.10.10.0 255.255.255.0 10.255.255.2
 ip route 10.20.20.0 255.255.255.0 10.255.255.6
 ip route 10.40.40.0 255.255.255.0 10.255.255.2
-
+```
 Why
 - External Connector DHCP를 통해 받은 gateway를 default route로 사용하여 EDGE1이 인터넷으로 패킷을 보낼 수 있게 한다.
 - 외부에서 돌아오는 응답 패킷을 내부 VLAN으로 되돌려 보내기 위한 return route다.
@@ -159,23 +162,27 @@ Why
 
 ---
 
+```cisco
 access-list 1 permit 10.0.0.0 0.255.255.255
 ip nat inside source list 1 interface g0/0 overload
-
+```
 Why 
 - 10.0.0.0/8 내부 사설망 주소를 EDGE1 외부 인터페이스 주소로 PAT 변환하여 인터넷 접속이 가능하게 한다.
 
 ---
 
+```cisco
 ntp server 10.40.40.1
-
+```
 Why
 - 내부 캠퍼스의 기준 시간 서버인 CORE1과 시간을 동기화하기 위해 사용한다.
 
 ---
 
+```cisco
 end
 wr
+```
 
 ---
 
@@ -185,7 +192,8 @@ Purpose
 - CORE1은 VLAN10/VLAN20/VLAN40 SVI, HSRP, DHCP relay, NTP master, SSH/SNMP/Syslog 관리 기능을 제공한다.
 
 ---
-  
+
+```cisco  
 conf t
 hostname CORE1
 
@@ -194,38 +202,43 @@ interface g0/0
  description TO-EDGE1
  ip address 10.255.255.2 255.255.255.252
  no shutdown
-
+```
 Why
 - CORE1과 EDGE1 사이를 L3 routed port로 구성한다.
 - default route의 next-hot인 EDGE1과 직접 연결되기 위해 필요하다.
 
 ---
 
+```cisco
 interface vlan 10
  ip helper-address 10.20.20.31
-
+```
  Why
  - VLAN10 사용자의 DHCP broadcast를 MGMT-SRV1의 dnsmasq DHCP 서버로 relay하기 위해 필요하다.
 
 ---
 
+```cisco
 ip route 0.0.0.0 0.0.0.0 10.255.255.1
-
+```
 Why
 - CORE1이 모르는 외부 목적지 트래픽을 EDGE1으로 전달하기 위한 default route 이다.
 
 ---
 
+```cisco
 ntp master 1
-
+```
 Why
 - CORE1을 내부 기준 시간 소스로 사용한다.
 - 모든 장비가 CORE1 시간을 기준으로 동기화되어 Syslog와 장애 분석의 시간 기준이 맞게 된다.
 
 ---
 
+```cisco
 end
 wr
+```
 
 ---
 
@@ -236,6 +249,7 @@ Purpose
 
 ---
 
+```cisco
 conf t
 hostname CORE2
 
@@ -244,36 +258,41 @@ interface g0/0
  description TO-EDGE1
  ip address 10.255.255.6 255.255.255.252
  no shutdown
-
+```
 Why
 - CORE2와 EDGE1 사이를 L3 routed port로 구성하여 CORE2 active VLAN 트래픽도 외부망으로 전달할 수 있게 한다.
 
 ---
 
+```cisco
 interface vlan 10
  ip helper-address 10.20.20.31
-
+```
 Why
 - VLAN10 DHCP 요청을 중앙 DHCP 서버인 MGMT-SRV1으로 relay한다.
 
 ---
 
+```cisco
 ip route 0.0.0.0 0.0.0.0 10.255.255.5
-
+```
 Why
 - CORE2가 외부 목적지 트래픽을 EDGE1로 전달하기 위한 default route 이다.
 
 ---
 
+```cisco
 ntp server 10.40.40.1
-
+```
 Why
 - CORE1을 기준 시간 서버로 사용하여 CORE2의 로그 시간이 CORE1과 일치하도록 한다.
 
 ---
 
+```cisco
 end
 wr
+```
 
 ---
 
@@ -284,82 +303,102 @@ Purpose
 
 ---
 
+```cisco
 conf t
 hostname ACC1
 
 interface vlan 40
  ip address 10.40.40.11 255.255.255.0
  no shutdown
-
+```
 Why
 - 각 Access Switch를 Management VLAN에서 SSH/SNMP/Syslog/NTP 대상으로 관리하기 위한 SVI 이다. 
 
 ---
 
+```cisco
 ip default-gateway 10.40.40.254
-
+```
 Why
 - 각 Access Switch는 L2 스위치이므로 라우팅 테이블 대신 default-gateway를 사용하여 원격 관리 트래픽을 CORE HSRP VIP로 전달한다.
 
 ---
 
+```cisco
 ntp server 10.40.40.1
-
+```
 Why
 - 각 Access Switch 로그의 시간 기준을 CORE1 NTP master와 동기화한다.
 
 ---
 
+```cisco
 end
 wr
+```
 
 ---
 
 ## STEP 6 - ACC2
 
+```cisco
 conf t
 hostname ACC2
 
 interface vlan 40
  ip address 10.40.40.12 255.255.255.0
  no shutdown
+```
 
 ---
 
+```cisco
 ip default-gateway 10.40.40.254
+```
 
 ---
 
+```cisco
 ntp server 10.40.40.1
+```
 
 ---
 
+```cisco
 end
 wr
+```
 
 ---
 
 ## STEP 7 - ACC3
 
+```cisco
 conf t
 hostname ACC3
 
 interface vlan 40
  ip address 10.40.40.13 255.255.255.0
  no shutdown
+```
 
 ---
 
+```cisco
 ip default-gateway 10.40.40.254
+```
 
 ---
 
+```cisco
 ntp server 10.40.40.1
-
+```
 ---
 
+```cisco
 end
 wr
+```
 
 ---
 
@@ -370,55 +409,62 @@ Purpose
 - 서버 VLAN20과 관리 VLAN40을 함께 수용한다.
 
 ---
-  
+
+```cisco  
 conf t
 hostname SRV-ACC1
 
 vlan 40
  name MGMT
-
+```
 Why
 - SRV-ACC1에서 VLAN40이 없어 VLAN40 SVI가 down/down 상태였기 때문에, 관리 VLAN을 생성하여 SVI를 활성화하기 위해 필요했다.
 
 ---
 
+```cisco
 interface g0/0
  description TO-ACC2
  switchport trunk encapsulation dot1q
  switchport trunk native vlan 999
  switchport mode trunk
  no shutdown
-
+```
 Why
 - ACC2와 SRV-ACC1 사이에 VLAN20 서버 트래픽과 VLAN40 관리 트래픽을 전달하기 위한 trunk uplink 이다.
 
 ---
 
+```cisco
 interface vlan 40
  ip address 10.40.40.21 255.255.255.0
  no shutdown
-
+```
 Why
 - SRV-ACC1 자체를 Management VLAN에서 관리하기 위한 SVI 이다.
 
 ---
-  
-ip default-gateway 10.40.40.254
 
+```cisco
+ip default-gateway 10.40.40.254
+```
 Why
 - SRV-ACC1이 원격 관리 트래픽을 CORE HSRP VIP로 전달하기 위해 필요하다.
 
 ---
 
+```cisco
 ntp server 10.40.40.1
-
+```
 Why
 - 각 Access Switch 로그의 시간 기준을 CORE1 NTP master와 동기화한다.
   
 ---
 
+```cisco
 end
 wr
+```
 
 ---
 
@@ -427,6 +473,7 @@ wr
 
 ---
 
+```cisco
 ip domain-name lab.local
 username admin privilege 15 secret <ADMIN_SECRET>
 crypto key generate rsa modulus 2048
@@ -439,7 +486,7 @@ line vty 0 4
 
 end
 wr 
-
+```
 Why
 - ip domain-name : RSA key 생성에 필요하다.
 - username : local login 인증 계정을 만든다.
@@ -451,6 +498,7 @@ Why
 
 ---
 
+```cisco
 service timestamps log datetime msec
 logging host 10.20.20.31
 logging trap informational
@@ -458,7 +506,7 @@ logging on
 
 end
 wr
-
+```
 Why
 - service timestamps : 로그에 시간 정보를 남긴다.
 - logging host : MGMT-SRV1을 중앙 Syslog 서버로 지정한다.
@@ -467,6 +515,7 @@ Why
 
 ---
 
+```cisco
 ip access-list standard SNMP-MGMT
  permit 10.20.20.0 0.0.0.255
 
@@ -476,7 +525,7 @@ snmp-server contact admin@lab.local
 
 end
 wr
-
+```
 Why
 - SNMP-MGMT ACL : SNMP 접근을 MGMT-SRV1이 위치한 관리망으로 제한한다.
 - NMS-RO : 읽기 전용 SNMP community 이다.
